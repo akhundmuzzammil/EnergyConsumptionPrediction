@@ -135,4 +135,4 @@ All dependencies are listed in requirements.txt.
 
 ## License
 
-This project is licensed under the terms specified in the LICENSE file.
+This project is licensed under the terms specified in the [LICENSE](LICENSE) file.
