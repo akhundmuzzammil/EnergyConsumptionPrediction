@@ -16,9 +16,16 @@ st.set_page_config(
 )
 
 # Personal Branding
-st.sidebar.markdown("""        
-Connect: [Website](https://www.akhundmuzzammil.com) | [GitHub](https://www.github.com/akhundmuzzammil) | [LinkedIn](https://www.linkedin.com/in/akhundmuzzammil/)
-""")
+st.sidebar.markdown("""
+<div style='padding: 5px 0; border-bottom: 1px solid #eee;'>
+    <p>
+        Built with Streamlit by <a href='https://akhundmuzzammil.com' target='_blank'>Muzzammil Akhund</a> 
+        <br>
+        Connect: <a href='https://github.com/akhundmuzzammil' target='_blank'>GitHub</a> 
+         | <a href='https://linkedin.com/in/akhundmuzzammil' target='_blank'>LinkedIn</a>
+    </p>
+</div>
+""", unsafe_allow_html=True)
 
 # Add project information to sidebar
 st.sidebar.title('About This Project')
@@ -188,14 +195,4 @@ with st.expander("💡 Energy Saving Tips"):
     - **Improve insulation** to lower heating and cooling costs
     - **Use smart thermostats** to optimize temperature control
     - **Install LED lighting** to reduce electricity use
-    - **Reduce phantom power** by unplugging devices when not in use
-    """)
-
-# Footer
-st.markdown("---")
-st.markdown("""
-<div style='text-align: center'>
-    <p>Built by <a href='https://akhundmuzzammil.com' target='_blank'>Muzzammil</a> with Streamlit | <a href='https://github.com/akhundmuzzammil/EnergyConsumptionPrediction' target='_blank'>Source Code</a></p>
-</div>
-""", unsafe_allow_html=True)
-
+    - **Reduce phantom power** by unplugging devices when not in use    """)
