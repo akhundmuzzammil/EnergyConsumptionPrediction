@@ -3,83 +3,199 @@ import pandas as pd
 import numpy as np
 import joblib
 import pickle
+import matplotlib.pyplot as plt
+import plotly.express as px
+import plotly.graph_objects as go
+
+# Set page configuration for SEO and theme
+st.set_page_config(
+    page_title="Energy Consumption Prediction",
+    page_icon="🔋",
+    layout="wide", # Changed to wide for better layout
+    initial_sidebar_state="auto",
+)
+
+# Personal Branding
+st.sidebar.markdown("""        
+Connect: [Website](https://www.akhundmuzzammil.com) | [GitHub](https://www.github.com/akhundmuzzammil) | [LinkedIn](https://www.linkedin.com/in/akhundmuzzammil/)
+""")
+
+# Add project information to sidebar
+st.sidebar.title('About This Project')
+st.sidebar.markdown("""
+### [GitHub Repository](github.com/akhundmuzzammil/EnergyConsumptionPrediction)
+
+### Overview
+This application predicts energy consumption based on building parameters using a Linear Regression model.
+
+### Features Used
+- Building Type
+- Square Footage
+- Number of Occupants
+- Appliances Used
+- Average Temperature
+- Day of Week
+
+### Data Source
+The model is trained on the [Energy Consumption Dataset](https://www.kaggle.com/datasets/govindaramsriram/energy-consumption-dataset-linear-regression) from Kaggle.
+
+### Project Details
+This project demonstrates:
+- Data preprocessing and feature engineering
+- Linear regression modeling
+- Standardization of numerical features
+- One-hot encoding of categorical features
+""")
 
 # Load the trained model and scaler
 model = joblib.load('linear_regression_model.pkl')
 with open('scaler.pkl', 'rb') as scaler_file:
     scaler = pickle.load(scaler_file)
 
-# Set page title
-st.title('Energy Consumption Prediction')
-st.write('Enter the building details to predict energy consumption')
+# Set page title with standard Streamlit elements
+st.title('🔋 Energy Consumption Prediction')
 
-# Create input fields
-building_type = st.selectbox(
-    'Building Type',
-    ['Residential', 'Commercial', 'Industrial']
-)
+# Create two columns for input fields
+col1, col2 = st.columns(2)
 
-square_footage = st.number_input('Square Footage', min_value=500, max_value=50000, value=1000)
-number_of_occupants = st.number_input('Number of Occupants', min_value=1, max_value=100, value=10)
-appliances_used = st.number_input('Appliances Used', min_value=1, max_value=50, value=5)
-average_temperature = st.number_input('Average Temperature (°C)', min_value=10.0, max_value=35.0, value=20.0)
-day_of_week = st.selectbox(
-    'Day of Week',
-    ['Weekday', 'Weekend']
-)
+with col1:
+    st.markdown("### Building Information")
+    building_type = st.selectbox(
+        'Building Type',
+        ['Residential', 'Commercial', 'Industrial']
+    )
+    square_footage = st.number_input('Square Footage (sq ft)', min_value=500, max_value=50000, value=1000)
+    number_of_occupants = st.number_input('Number of Occupants', min_value=1, max_value=100, value=10)
 
-if st.button('Predict Energy Consumption'):
-    # Create a DataFrame with user inputs
-    input_data = pd.DataFrame({
-        'Building Type': [building_type],
-        'Square Footage': [square_footage],
-        'Number of Occupants': [number_of_occupants],
-        'Appliances Used': [appliances_used],
-        'Average Temperature': [average_temperature],
-        'Day of Week': [day_of_week]
-    })
+with col2:
+    st.markdown("### Environment Details")
+    appliances_used = st.number_input('Appliances Used', min_value=1, max_value=50, value=5)
+    average_temperature = st.slider('Average Temperature (°C)', min_value=10.0, max_value=35.0, value=20.0, step=0.5)
+    day_of_week = st.selectbox(
+        'Day of Week',
+        ['Weekday', 'Weekend']
+    )
 
-    # Perform one-hot encoding
-    categorical_features = ["Building Type", "Day of Week"]
-    input_encoded = pd.get_dummies(input_data, columns=categorical_features, drop_first=True)
+# Center the prediction button
+predict_button = st.button('Predict Energy Consumption', key='predict_button')
 
-    # Ensure all columns from training are present
-    expected_columns = ['Square Footage', 'Number of Occupants', 'Appliances Used',
-                       'Average Temperature', 'Building Type_Industrial', 'Building Type_Residential',
-                       'Day of Week_Weekend']
+if predict_button:
+    # Show a spinner during prediction
+    with st.spinner('Calculating energy consumption...'):
+        # Create a DataFrame with user inputs
+        input_data = pd.DataFrame({
+            'Building Type': [building_type],
+            'Square Footage': [square_footage],
+            'Number of Occupants': [number_of_occupants],
+            'Appliances Used': [appliances_used],
+            'Average Temperature': [average_temperature],
+            'Day of Week': [day_of_week]
+        })
+
+        # Perform one-hot encoding
+        categorical_features = ["Building Type", "Day of Week"]
+        input_encoded = pd.get_dummies(input_data, columns=categorical_features, drop_first=True)
+
+        # Ensure all columns from training are present
+        expected_columns = ['Square Footage', 'Number of Occupants', 'Appliances Used',
+                           'Average Temperature', 'Building Type_Industrial', 'Building Type_Residential',
+                           'Day of Week_Weekend']
+        
+        for col in expected_columns:
+            if col not in input_encoded.columns:
+                input_encoded[col] = 0
+
+        # Reorder columns to match training data
+        input_encoded = input_encoded[expected_columns]
+
+        # Scale numerical features
+        numerical_features = ["Square Footage", "Number of Occupants", "Appliances Used", "Average Temperature"]
+        input_encoded[numerical_features] = scaler.transform(input_encoded[numerical_features])
+
+        # Make prediction
+        prediction = model.predict(input_encoded)[0]
+
+    # Display result with standard Streamlit styling
+    st.success(f"Predicted Energy Consumption: {prediction:.2f} kWh")
     
-    for col in expected_columns:
-        if col not in input_encoded.columns:
-            input_encoded[col] = 0
-
-    # Reorder columns to match training data
-    input_encoded = input_encoded[expected_columns]
-
-    # Scale numerical features
-    numerical_features = ["Square Footage", "Number of Occupants", "Appliances Used", "Average Temperature"]
-    input_encoded[numerical_features] = scaler.transform(input_encoded[numerical_features])
-
-    # Make prediction
-    prediction = model.predict(input_encoded)[0]
-
-    # Display result
-    st.success(f'Predicted Energy Consumption: {prediction:.2f} kWh')
-
-    # Additional insights
-    st.write('### Prediction Insights')
-    st.write('Factors that generally increase energy consumption:')
-    st.write('- Larger square footage')
-    st.write('- More occupants')
-    st.write('- More appliances')
-    st.write('- Extreme temperatures')
-    st.write('- Industrial building type')
+    # Create columns for displaying results
+    results_col1, results_col2 = st.columns([2, 3])
+    
+    with results_col1:
+        st.markdown("### Prediction Result")
+        
+        # Add a gauge chart for visual representation
+        fig = go.Figure(go.Indicator(
+            mode = "gauge+number",
+            value = prediction,
+            domain = {'x': [0, 1], 'y': [0, 1]},
+            title = {'text': "Energy Consumption (kWh)"},
+            gauge = {
+                'axis': {'range': [None, max(50000, prediction*1.5)]},
+                'bar': {'color': "#2e7d32"},
+                'steps': [
+                    {'range': [0, 10000], 'color': "lightgreen"},
+                    {'range': [10000, 30000], 'color': "yellow"},
+                    {'range': [30000, 50000], 'color': "orange"}
+                ],
+            }
+        ))
+        fig.update_layout(height=250)
+        st.plotly_chart(fig, use_container_width=True)
+        
+    with results_col2:
+        st.markdown("### Factors Affecting Consumption")
+        
+        # Create a bar chart showing the importance of each input
+        factor_data = {
+            'Factor': ['Square Footage', 'Occupants', 'Appliances', 'Temperature', 'Building Type'],
+            'Value': [square_footage/1000, number_of_occupants/10, appliances_used/5, 
+                     (average_temperature-10)/25, 
+                     0.5 if building_type == 'Residential' else (0.7 if building_type == 'Commercial' else 0.9)]
+        }
+        
+        df_factors = pd.DataFrame(factor_data)
+        fig = px.bar(df_factors, x='Factor', y='Value', 
+                    color='Value', 
+                    color_continuous_scale=['green', 'yellow', 'red'],
+                    title="Relative Impact of Factors (normalized)")
+        fig.update_layout(height=250)
+        st.plotly_chart(fig, use_container_width=True)
+        
+        st.markdown("""
+        **Factors that increase energy consumption:**
+        - Larger square footage 🏢
+        - More occupants 👥
+        - More appliances 🔌
+        - Extreme temperatures 🌡️
+        - Industrial building type 🏭
+        """)
 
 # Add footer with instructions
+st.markdown("---")
+st.markdown("### How to Use This Tool")
 st.markdown("""
----
-### Instructions:
-1. Enter the building details in the fields above
-2. Click 'Predict Energy Consumption' to see the prediction
-3. Values are automatically validated to ensure they're within reasonable ranges
-4. The model uses historical data to make predictions
+1. Enter your building details in the form above
+2. Click the 'Predict Energy Consumption' button
+3. Review the prediction and insights
+4. Adjust input parameters to see how they affect energy consumption
 """)
+
+# Add a fun facts section at the bottom
+with st.expander("💡 Energy Saving Tips"):
+    st.markdown("""
+    - **Upgrade to energy-efficient appliances** to reduce consumption by up to 30%
+    - **Improve insulation** to lower heating and cooling costs
+    - **Use smart thermostats** to optimize temperature control
+    - **Install LED lighting** to reduce electricity use
+    - **Reduce phantom power** by unplugging devices when not in use
+    """)
+
+# Footer
+st.markdown("---")
+st.markdown("""
+<div style='text-align: center'>
+    <p>Built by <a href='https://akhundmuzzammil.com' target='_blank'>Muzzammil</a> with Streamlit | <a href='https://github.com/akhundmuzzammil/EnergyConsumptionPrediction' target='_blank'>Source Code</a></p>
+</div>
+""", unsafe_allow_html=True)
+
