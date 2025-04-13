@@ -17,7 +17,7 @@ st.set_page_config(
 
 # Personal Branding
 st.sidebar.markdown("""
-<div style='padding: 5px 0; border-bottom: 1px solid #eee;'>
+<div>
     <p>
         Built with Streamlit by <a href='https://akhundmuzzammil.com' target='_blank'>Muzzammil Akhund</a> 
         <br>
@@ -30,7 +30,7 @@ st.sidebar.markdown("""
 # Add project information to sidebar
 st.sidebar.title('About This Project')
 st.sidebar.markdown("""
-### [GitHub Repository](github.com/akhundmuzzammil/EnergyConsumptionPrediction)
+### [GitHub Repository](https://github.com/akhundmuzzammil/EnergyConsumptionPrediction)
 
 ### Overview
 This application predicts energy consumption based on building parameters using a Linear Regression model.
